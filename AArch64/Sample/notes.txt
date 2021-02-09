@@ -1,3 +1,21 @@
+
+Internal work items.
+- Debug and fix why local time and utc time are coming out to be same value.
+- Print a header message (Terminal)(Starting ToF Application, Header fields, Logs)
+- Print to a log file (Duplicate of whatever we print on terminal) (say /var/log/tof-output.log, add a config constant for this file name.)
+- Print to a CSV file (only header & required data). CSV File should be refreshed every hour. (Filename: /var/log/tof/2021-02-01-12-30.csv). Create a new CSV file every hour.
+- Implement log rotation (use some existing log location mechanism like https://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/src/util/logrotate.cpp)
+
+
+
+
+Harsh to  take care of this --> Maybe through a cron job?
+- Cleanup old log & CSV files > 2 days old. (Log rotation).
+
+
+For VZense/Longer term work items:
 - Automatically calibrate the sensor. Figure out static distances and figure it out.
+- Accuracy improvements
+
 
 

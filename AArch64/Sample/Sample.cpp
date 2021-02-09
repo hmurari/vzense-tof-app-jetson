@@ -3,6 +3,7 @@
 #include <thread>
 #include <stdio.h>
 #include "VzPeopleCountAPI.h"
+#include "TimeUtils.hpp"
 
 using namespace std;
 using namespace cv;
@@ -29,6 +30,56 @@ bool g_bopenDoor = false;
 bool g_blowPower = false;
 bool g_bShowImg = true;
 
+int FIRST_RING = 6 * 304.8;  // 6ft in millimeter
+int SECOND_RING = 12 * 304.8; // 12ft in millimeter
+
+static void processPeopleInfo(VzPeopleInfoCount* pPeopleInfoCount, int *prevPeopleCnt, int *prevDwellCnt, int *prevFirstRingCnt, int *prevSecondRingCnt){
+
+
+	// Calculate current frame info
+	int peopleCnt = pPeopleInfoCount->validPeopleCount;
+	int dwellCnt = pPeopleInfoCount->dwellPeopleCount;
+	int firstRingCnt = 0;
+	int secondRingCnt = 0;
+	for (int i = 0; i < pPeopleInfoCount->validPeopleCount; i++) { 
+		if (pPeopleInfoCount->peopleInfo[i].distance < FIRST_RING) {
+			firstRingCnt++;
+		} 
+		else if (pPeopleInfoCount->peopleInfo[i].distance < SECOND_RING) {
+			secondRingCnt++;
+		}
+
+	}
+
+	// If current frame is different than previous frame.
+	if (*prevPeopleCnt != peopleCnt ||
+		*prevDwellCnt != dwellCnt ||
+		*prevFirstRingCnt != firstRingCnt ||
+		*prevSecondRingCnt != secondRingCnt) {
+
+		// Localtime
+		// UTC Time
+		// Number of People in Frame
+		// Number of Active Observers
+		// Number of People in 1st ring (6')
+		// Number of people in 2nd ring (15')
+        	char *local_time_str = get_local_time_str();
+		char *local_and_gm_time_str = get_local_and_gm_time_str();	
+	
+		printf("%s | People Count %d | Dwell Count %d | First Ring %d | Second Ring %d \n", local_and_gm_time_str, peopleCnt, dwellCnt, firstRingCnt, secondRingCnt);
+	}
+
+	// Store current frame value as prev frame values for next iteration
+	*prevPeopleCnt = peopleCnt;
+	*prevDwellCnt = dwellCnt;
+	*prevFirstRingCnt = firstRingCnt;
+	*prevSecondRingCnt = secondRingCnt;
+
+	return;
+}
+
+
+
 int main(int argc, char *argv[])
 {
 	Vz_PCInitialize();
@@ -44,6 +95,10 @@ OPEN:
 
 	VzPeopleInfoCount peopleInfoCount = {0};
 	cv::Mat imageMat;
+        int prevPeopleCnt = 0;
+        int prevDwellCnt = 0;
+	int prevFirstRing = 0;
+	int prevSecondRing = 0;
 	while (g_isRunning)
 	{
 
@@ -62,7 +117,8 @@ OPEN:
 			{
 				imageMat = cv::Mat(peopleInfoCount.frame.height, peopleInfoCount.frame.width, CV_8UC1, peopleInfoCount.frame.pFrameData);
 				cv::imshow("ShowImg", imageMat);
-			}
+				processPeopleInfo(&peopleInfoCount, &prevPeopleCnt, &prevDwellCnt, &prevFirstRing, &prevSecondRing);
+                        }
 			else if ((true == g_bopenDoor && VzReturnStatus::VzRetDoorWasOpend == result) 
 					|| (VzReturnStatus::VzRetOK == result) 
 					|| (true == g_blowPower))
