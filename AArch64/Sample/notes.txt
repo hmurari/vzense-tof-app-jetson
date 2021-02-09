@@ -1,0 +1,3 @@
+- Automatically calibrate the sensor. Figure out static distances and figure it out.
+
+
